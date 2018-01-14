@@ -2,7 +2,6 @@ import numpy as np
 
 
 def _phi(alpha, beta):
-    """ Common function. """
     return beta * np.tan(np.pi * alpha / 2.0)
 
 

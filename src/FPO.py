@@ -1,11 +1,13 @@
 from random import random, sample
 import numpy as np
+import matplotlib.pyplot as plt
+
 from levy import get_levy_flight_array
 
 
 class FPO:
-    def __init__(self, obj_fun, iterations_num, pop_size,
-                 p=0.5, dim=10, val_min = -100., val_max = 100):
+    def __init__(self, obj_fun, iterations_num, pop_size, p=0.5,
+                 dim=10, val_min=-100., val_max=100, plot=False):
         self.obj_fun = obj_fun
         self.iterations_num = iterations_num
         self.dim = dim
@@ -16,15 +18,29 @@ class FPO:
         self.obj_vals = np.zeros(pop_size)
         self.val_max = val_max
         self.val_min = val_min
+        self.plot = plot
 
     def run(self):
         self.initialize_population()
         self.calculate_obj()
-        for _ in range(self.iterations_num):
+        avg = []
+        bests = []
+        for i in range(self.iterations_num):
             self.check_best()
             self.pollination()
-            print self.best[0]
+            if self.plot:
+                avg.append(np.mean(self.obj_vals))
+                bests.append(min(self.obj_vals))
+            if not i % 50: print "Iteration {} best result: {}".format(i, self.best[0])
+        if self.plot:
+            plt.plot(avg, label="avg")
+            plt.plot(bests, label="best")
+            plt.yscale('log')
+            plt.legend()
+            plt.show()
+
         print self.best
+
     def initialize_population(self):
         self.population = [(np.random.rand(self.dim) * 200) - 100 for _ in range(self.pop_size)]
 
@@ -49,13 +65,13 @@ class FPO:
         indexes = sample(range(0, self.pop_size), 2)
         sol1 = self.population[indexes[0]]
         sol2 = self.population[indexes[1]]
-        tmp =  e* (sol1 + sol2)
+        tmp = e * (sol1 + sol2)
         new_solution = self.population[i] + tmp
         self.check_new_solution(new_solution, i)
 
     def global_pollination(self, i):
         levy_vector = get_levy_flight_array(self.dim)
-        tmp = levy_vector*(self.best[1] - self.population[i])
+        tmp = levy_vector * (self.best[1] - self.population[i])
         new_solution = self.population[i] + tmp
         self.check_new_solution(new_solution, i)
 
